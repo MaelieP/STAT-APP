@@ -1,0 +1,60 @@
+# Installer et charger le package haven si ce n'est pas déjà fait
+# install.packages("haven")
+library(dplyr)
+library(haven)
+
+# Étape 1 : Lire le fichier texte pour obtenir les chemins des fichiers
+chemins_fichiers <- readLines("/Users/maelieperier/Desktop/STAT-APP/texte-liste-variable .txt")
+
+# Initialiser la base de données principale
+base_principale <- data.frame(idpers = double()) 
+
+# Définir les colonnes à rechercher
+colonnes_a_rechercher <- c(
+  "idpers", "^i[0-9]+capyi", "^i[0-9]+empmni", "^i[0-9]+empyni", "^i[0-9]+indyni", "^i[0-9]+wyi", 
+  "^i[0-9]+wygi", "^i[0-9]+wyni", "^FILT\\d{0,2}ER$", "^IDHOU\\d{0,2}S$", "^IDPER\\d{0,2}S$", 
+  "^IDSP\\d{0,2}OU$", "^AGE\\d{0,2}$", "^SEX\\d{0,2}$", "^CIVST\\d{0,2}A$", "^COHAS\\d{0,2}T$", 
+  "^OWNKI\\d{0,2}D$", "^P\\d{0,2}L26T$", "^P\\d{0,2}D36$", "^P\\d{0,2}D17$", "^P\\d{0,2}D17M$", 
+  "^WSTA\\d{0,2}T$", "^CSPM\\d{0,2}AJ$", "^ESEC\\d{0,2}MJ$", "^GLDM\\d{0,2}AJ$", "^IS1M\\d{0,2}AJ$", 
+  "^IS2M\\d{0,2}AJ$", "^IS3M\\d{0,2}AJ$", "^IS4M\\d{0,2}AJ$", "^OCCUP\\d{0,2}A$", "^P\\d{0,2}W01$", 
+  "^P\\d{0,2}W18$", "^P\\d{0,2}W21$", "^P\\d{0,2}W23$", "^P\\d{0,2}W25$", "^P\\d{0,2}W28$", 
+  "^P\\d{0,2}W29$", "^P\\d{0,2}W29A$", "^P\\d{0,2}W34$", "^P\\d{0,2}W34A$", "^P\\d{0,2}W35$", 
+  "^P\\d{0,2}W37$", "^P\\d{0,2}W39$", "^P\\d{0,2}W104$", "^P\\d{0,2}W105$", "^EDCAT\\d{0,2}$", 
+  "^EDGR\\d{0,2}$", "^EDYEAR\\d{0,2}$", "^P\\d{0,2}A18$", "^P\\d{0,2}A18A$", "^P\\d{0,2}A18B$", 
+  "^P\\d{0,2}A19$", "^P\\d{0,2}A123$", "^filt\\d{0,2}er$", "^idhou\\d{0,2}s$", "^idper\\d{0,2}s$", 
+  "^idsp\\d{0,2}ou$", "^age\\d{0,2}$", "^sex\\d{0,2}$", "^civst\\d{0,2}a$", "^cohas\\d{0,2}t$", 
+  "^ownki\\d{0,2}d$", "^p\\d{0,2}l26t$", "^p\\d{0,2}d36$", "^p\\d{0,2}d17$", "^p\\d{0,2}d17m$", 
+  "^wsta\\d{0,2}t$", "^cspm\\d{0,2}aj$", "^esec\\d{0,2}mj$", "^gldm\\d{0,2}aj$", "^is1m\\d{0,2}aj$", 
+  "^is2m\\d{0,2}aj$", "^is3m\\d{0,2}aj$", "^is4m\\d{0,2}aj$", "^occup\\d{0,2}a$", "^p\\d{0,2}w01$", 
+  "^p\\d{0,2}w18$", "^p\\d{0,2}w21$", "^p\\d{0,2}w23$", "^p\\d{0,2}w25$", "^p\\d{0,2}w28$", 
+  "^p\\d{0,2}w29$", "^p\\d{0,2}w29a$", "^p\\d{0,2}w34$", "^p\\d{0,2}w34a$", "^p\\d{0,2}w35$", 
+  "^p\\d{0,2}w37$", "^p\\d{0,2}w39$", "^p\\d{0,2}w104$", "^p\\d{0,2}w105$", "^edcat\\d{0,2}$", 
+  "^edgr\\d{0,2}$", "^edyear\\d{0,2}$", "^p\\d{0,2}a18$", "^p\\d{0,2}a18a$", "^p\\d{0,2}a18b$", 
+  "^p\\d{0,2}a19$", "^p\\d{0,2}a123$"
+)
+
+# Initialiser la liste des colonnes non trouvées
+colonnes_non_trouvees <- c()
+
+# Étape 2 : Parcourir chaque fichier et extraire les variables nécessaires
+for (chemin_fichier in chemins_fichiers) {
+  # Lire le fichier de base de données
+  base_i <- read_sav(chemin_fichier)
+  
+  # Vérifier et sélectionner uniquement les colonnes présentes dans le fichier
+  colonnes_presentes <- intersect(colnames(base_i), colonnes_a_rechercher)
+  variables_necessaires <- base_i %>% select(colonnes_presentes) %>% rename(idpers = matches("(?i)IDPERS"))
+  
+  # Ajouter à la base principale en utilisant la fonction left_join
+  base_principale <- left_join(base_principale, variables_necessaires, by = "idpers")
+  
+  # Mettre à jour la liste des colonnes non trouvées
+  colonnes_non_trouvees <- union(colonnes_non_trouvees, setdiff(colonnes_a_rechercher, colonnes_presentes))
+}
+
+# Afficher les premières lignes de la base principale
+head(base_principale)
+
+# Afficher les colonnes non trouvées
+cat("Colonnes non trouvées :", colonnes_non_trouvees, "\n")
+

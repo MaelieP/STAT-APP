@@ -1,0 +1,109 @@
+#install.packages("haven")
+#install.packages("dplyr")
+
+library(haven)
+library(dplyr)
+
+
+
+nombre_fichier = 72 
+ligne_n <- function(n){ 
+  chemin_fichier <- '/Users/maelieperier/Desktop/STAT-APP/texte-liste-variable .txt' 
+  lignes <- readLines(chemin_fichier) 
+  ma_ligne <- lignes[n] 
+  return(ma_ligne)} 
+
+
+#On fait une base vierge avec que les idpers pour pouvoir faire le premier merge 
+
+income_pers_wide <- '/Users/maelieperier/Desktop/STAT-APP/Data_SPSS/SHP-Data-Imputed-Income-Wealth-SPSS/imputed_income_pers_wide_shp.sav'
+imputed_income_pers_wide_shp <- haven::read_sav(income_pers_wide) 
+imputed_income_pers_wide_shp %>% select(idpers) -> base_agregee 
+
+base_de_donnee <- function(){ 
+  base_agregee <- haven::read_sav("/Users/maelieperier/Desktop/STAT-APP/Data_SPSS/SHP-Data-Imputed-Income-Wealth-SPSS/imputed_income_pers_wide_shp.sav") %>% select(idpers)
+  
+  for (i in 1:nombre_fichier){ 
+    chemin_i <- ligne_n(i) 
+    base_i <- haven::read_sav(chemin_i) 
+    
+    base_utile <- base_i %>% 
+      select(idpers, IDPERS, 
+             matches("^i[0-9]+capyi"), 
+             matches("^i[0-9]+empmni"),
+             matches("^i[0-9]+empyni"),
+             matches("^i[0-9]+indyni"),
+             matches("^i[0-9]+wyi"), 
+             matches("^i[0-9]+wygi"), matches("^i[0-9]+wyni"), "^FILT\\d{0,2}ER$", "^IDHOU\\d{0,2}S$", "^IDPER\\d{0,2}S$", "^IDSP\\d{0,2}OU$", "^AGE\\d{0,2}$", "^SEX\\d{0,2}$", "^CIVST\\d{0,2}A$", "^COHAS\\d{0,2}T$", 
+             "^OWNKI\\d{0,2}D$", "^P\\d{0,2}L26T$", "^P\\d{0,2}D36$", "^P\\d{0,2}D17$", "^P\\d{0,2}D17M$", "^WSTA\\d{0,2}T$", 
+             "^CSPM\\d{0,2}AJ$", "^ESEC\\d{0,2}MJ$", "^GLDM\\d{0,2}AJ$", "^IS1M\\d{0,2}AJ$", 
+             "^IS2M\\d{0,2}AJ$", "^IS3M\\d{0,2}AJ$", "^IS4M\\d{0,2}AJ$", "^OCCUP\\d{0,2}A$", 
+             "^P\\d{0,2}W01$", "^P\\d{0,2}W18$", "^P\\d{0,2}W21$", "^P\\d{0,2}W23$", "^P\\d{0,2}W25$", 
+             "^P\\d{0,2}W28$", "^P\\d{0,2}W29$", "^P\\d{0,2}W29A$", "^P\\d{0,2}W34$", "^P\\d{0,2}W34A$", 
+             "^P\\d{0,2}W35$", "^P\\d{0,2}W37$", "^P\\d{0,2}W39$", "^P\\d{0,2}W104$", "^P\\d{0,2}W105$", 
+             "^EDCAT\\d{0,2}$", "^EDGR\\d{0,2}$", "^EDYEAR\\d{0,2}$", "^P\\d{0,2}A18$", "^P\\d{0,2}A18A$", 
+             "^P\\d{0,2}A18B$", "^P\\d{0,2}A19$", "^P\\d{0,2}A123$", "^filt\\d{0,2}er$", "^idhou\\d{0,2}s$", 
+             "^idper\\d{0,2}s$", "^idsp\\d{0,2}ou$", "^age\\d{0,2}$", "^sex\\d{0,2}$", "^civst\\d{0,2}a$", 
+             "^cohas\\d{0,2}t$", "^ownki\\d{0,2}d$", "^p\\d{0,2}l26t$", "^p\\d{0,2}d36$", "^p\\d{0,2}d17$", 
+             "^p\\d{0,2}d17m$", "^wsta\\d{0,2}t$", "^cspm\\d{0,2}aj$", "^esec\\d{0,2}mj$", "^gldm\\d{0,2}aj$", 
+             "^is1m\\d{0,2}aj$", "^is2m\\d{0,2}aj$", "^is3m\\d{0,2}aj$", "^is4m\\d{0,2}aj$", "^occup\\d{0,2}a$", 
+             "^p\\d{0,2}w01$", "^p\\d{0,2}w18$", "^p\\d{0,2}w21$", "^p\\d{0,2}w23$", "^p\\d{0,2}w25$", "^p\\d{0,2}w28$", 
+             "^p\\d{0,2}w29$", "^p\\d{0,2}w29a$", "^p\\d{0,2}w34$", "^p\\d{0,2}w34a$", "^p\\d{0,2}w35$", "^p\\d{0,2}w37$", "^p\\d{0,2}w39$", 
+             "^p\\d{0,2}w104$", "^p\\d{0,2}w105$", "^edcat\\d{0,2}$", "^edgr\\d{0,2}$", "^edyear\\d{0,2}$", "^p\\d{0,2}a18$", 
+             "^p\\d{0,2}a18a$", "^p\\d{0,2}a18b$", "^p\\d{0,2}a19$", "^p\\d{0,2}a123$") %>% rename(idpers = IDPERS) -> base_utile
+    
+    base_agregee <- left_join(base_agregee, base_utile, by = "idpers")
+  } 
+  
+  return(base_agregee)
+}
+
+resultat <- base_de_donnee()
+head(resultat)
+
+
+
+base_de_donnee <- function(){ 
+  
+  for (i in 1:nombre_fichier){ 
+    #on récupère le chemin du fichier n°i 
+    chemin_i = ligne_n(i) 
+    #on ouvre ce fichier i 
+    base_i <- haven::read_sav(chemin_i) 
+    #On séléctionne les variables dont on a besoin: 
+    
+    
+    base_i %>% select(idpers, IDPERS, 
+                      matches("^i[0-9]+capyi"), 
+                      matches("^i[0-9]+empmni"),
+                      matches("^i[0-9]+empyni"),
+                      matches("^i[0-9]+indyni"),
+                      matches("^i[0-9]+wyi"), 
+                      matches("^i[0-9]+wygi"), matches("^i[0-9]+wyni"), "^FILT\\d{0,2}ER$", "^IDHOU\\d{0,2}S$", "^IDPER\\d{0,2}S$", "^IDSP\\d{0,2}OU$", "^AGE\\d{0,2}$", "^SEX\\d{0,2}$", "^CIVST\\d{0,2}A$", "^COHAS\\d{0,2}T$", 
+                      "^OWNKI\\d{0,2}D$", "^P\\d{0,2}L26T$", "^P\\d{0,2}D36$", "^P\\d{0,2}D17$", "^P\\d{0,2}D17M$", "^WSTA\\d{0,2}T$", 
+                      "^CSPM\\d{0,2}AJ$", "^ESEC\\d{0,2}MJ$", "^GLDM\\d{0,2}AJ$", "^IS1M\\d{0,2}AJ$", 
+                      "^IS2M\\d{0,2}AJ$", "^IS3M\\d{0,2}AJ$", "^IS4M\\d{0,2}AJ$", "^OCCUP\\d{0,2}A$", 
+                      "^P\\d{0,2}W01$", "^P\\d{0,2}W18$", "^P\\d{0,2}W21$", "^P\\d{0,2}W23$", "^P\\d{0,2}W25$", 
+                      "^P\\d{0,2}W28$", "^P\\d{0,2}W29$", "^P\\d{0,2}W29A$", "^P\\d{0,2}W34$", "^P\\d{0,2}W34A$", 
+                      "^P\\d{0,2}W35$", "^P\\d{0,2}W37$", "^P\\d{0,2}W39$", "^P\\d{0,2}W104$", "^P\\d{0,2}W105$", 
+                      "^EDCAT\\d{0,2}$", "^EDGR\\d{0,2}$", "^EDYEAR\\d{0,2}$", "^P\\d{0,2}A18$", "^P\\d{0,2}A18A$", 
+                      "^P\\d{0,2}A18B$", "^P\\d{0,2}A19$", "^P\\d{0,2}A123$", "^filt\\d{0,2}er$", "^idhou\\d{0,2}s$", 
+                      "^idper\\d{0,2}s$", "^idsp\\d{0,2}ou$", "^age\\d{0,2}$", "^sex\\d{0,2}$", "^civst\\d{0,2}a$", 
+                      "^cohas\\d{0,2}t$", "^ownki\\d{0,2}d$", "^p\\d{0,2}l26t$", "^p\\d{0,2}d36$", "^p\\d{0,2}d17$", 
+                      "^p\\d{0,2}d17m$", "^wsta\\d{0,2}t$", "^cspm\\d{0,2}aj$", "^esec\\d{0,2}mj$", "^gldm\\d{0,2}aj$", 
+                      "^is1m\\d{0,2}aj$", "^is2m\\d{0,2}aj$", "^is3m\\d{0,2}aj$", "^is4m\\d{0,2}aj$", "^occup\\d{0,2}a$", 
+                      "^p\\d{0,2}w01$", "^p\\d{0,2}w18$", "^p\\d{0,2}w21$", "^p\\d{0,2}w23$", "^p\\d{0,2}w25$", "^p\\d{0,2}w28$", 
+                      "^p\\d{0,2}w29$", "^p\\d{0,2}w29a$", "^p\\d{0,2}w34$", "^p\\d{0,2}w34a$", "^p\\d{0,2}w35$", "^p\\d{0,2}w37$", "^p\\d{0,2}w39$", 
+                      "^p\\d{0,2}w104$", "^p\\d{0,2}w105$", "^edcat\\d{0,2}$", "^edgr\\d{0,2}$", "^edyear\\d{0,2}$", "^p\\d{0,2}a18$", 
+                      "^p\\d{0,2}a18a$", "^p\\d{0,2}a18b$", "^p\\d{0,2}a19$", "^p\\d{0,2}a123$") %>% rename(idpers = IDPERS) -> base_utile 
+    
+    base_agregee %>% left_join(base_utile, by = "idpers") -> base_agregee 
+    
+  } 
+  
+  return(base_agregee)}
+
+base_de_donnee()
+
+resultat <- base_de_donnee()
+head(resultat)
